@@ -56,7 +56,7 @@ mvn -version
 sudo yum install -y asciidoc cyrus-sasl-devel cyrus-sasl-gssapi cyrus-sasl-plain \
 krb5-devel libffi-devel libxml2-devel libxslt-devel openldap-devel gmp-devel sqlite-devel \
 python-devel \
-mysql mysql-devel libtidy openssl-devel
+mysql mysql-devel openssl-devel
 
 # a libtidy estava no tutorial inicial, mas não está no repositório oficial,
 # logo, baixar e instalar
@@ -76,12 +76,6 @@ popd
 
 # o HUE fica em um subdiretório de /var/local ou /usr/local ---- VRF
 vim ~/.bash_profile
-
-#HUE_HOME
-export HUE_HOME="VERIFICAR O LOCAL"
-export PATH=$PATH:$HUE_HOME/bin
-
-. ~/.bash_profile
 
 
 # IMPORTANTE !!!!!!!
@@ -108,6 +102,7 @@ ps -f -u hue
 kill "PID QUE RESTOU"
 
 
+#migrar os metadados para o Postgresql
 #diretório de configurações:
 $HUE_HOME/desktop/conf
 
@@ -120,7 +115,7 @@ sudo -u postgres psql
 
 
 #criar diretório de backup e efetuar dump do arquivo de configurações do hue
-mkdir /home/hadoop/p_conf
+mkdir /home/hadoop/bkp_conf
 sudo $HUE_HOME/build/env/bin/hue dumpdata > ~/bkp_conf/hue_db_dump.json
 sudo cp $HUE_HOME/desktop/conf/hue.ini  ~/bkp_conf/
 
@@ -138,7 +133,7 @@ vim $HADOOP_CONF_DIR/core-site.xml
 </property>
 
 <property>
-  <name>hadoop.proxyuser.hduser.groups</name>
+  <name>hadoop.proxyuser.hueuser.groups</name>
   <value>*</value>
 </property>
 
@@ -178,6 +173,8 @@ vim $HADOOP_CONF_DIR/core-site.xml
 
     hive_conf_dir=/opt/hive/conf
 
+#alterar /var/lib/psql/data/pg_hba.conf
+host    hue   hueuser   0.0.0.0/0   md5
 
 
 sudo passwd hue
@@ -201,3 +198,10 @@ sudo nohup $HUE_HOME/build/env/bin/supervisor &
 
 
 # testar o HIVE pelo HUE. Verificar o campo "administration"
+
+
+#HUE_HOME
+export HUE_HOME="VERIFICAR O LOCAL"
+export PATH=$PATH:$HUE_HOME/bin
+
+. ~/.bash_profile

@@ -3,7 +3,7 @@ cd /opt
 sudo wget https://www-us.apache.org/dist/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz
 sudo tar -xf apache-hive-3.1.2-bin.tar.gz
 sudo mv apache-hive-3.1.2-bin hive
-sudo chown hadoop:hadoop hive
+sudo chown -R hadoop:hadoop hive
 
 
 # Variáveis de ambiente
@@ -49,12 +49,15 @@ sudo -u postgres psql
 sudo vim /var/lib/pgsql/data/pg_hba.conf
 
 # incluir a linha (procurar uma linha parecida - IPV4):
-host	    all		all        0.0.0.0/0		md5
-host		  hive	hiveuser   0.0.0.0/0		md5
+host	    all		all        0.0.0.0/0		 md5
+host		  hive	hiveuser   0.0.0.0/0		 md5
+#alterar a seguinte linha
+host      all   all        127.0.0.1/32  md5
+
 
 
 ### editar o arquivo postgresql.conf
-vim /var/lib/pgsql/data/postgresql.conf
+sudo vim /var/lib/pgsql/data/postgresql.conf
 
 #incluir a linha:
 
@@ -66,12 +69,6 @@ sudo systemctl restart postgresql
 
 
 ### editar o arquivo hive-site.xml
-
-# os arquivos ".template" são somente leitura, copiar para xml
-# esses arquivos podem servir como referência:
-
-cp hive-default.xml.template hive-site.xml
-
 vim /opt/hive/conf/hive-site.xml
 
 #incluir parâmetros:
@@ -127,6 +124,10 @@ vim /opt/hive/conf/hive-site.xml
 
 </configuration>
 
+
+### Iniciar o hadoop-yarn
+start-dfs.sh && start-yarn.sh
+
 # testando
 hive -version
 
@@ -137,7 +138,6 @@ hive -version
 schematool -dbType postgres initSchema
 
 ### iniciando o hiveserver2
-nohup hive --service hiveserver2 &
 #nohup desvincula o processl do tty atual, apertar enter para continuar o trabalho
 
 #verificar se está tudo rodando:
@@ -147,30 +147,39 @@ jps
 
 ### Configurações do HADOOP
 # verificar os parâmetros hadoop.proxyuser core-site.xml
-vim $HADOOP_CONF_DIR/core-site
+vim $HADOOP_CONF_DIR/core-site.xml
 
 # Incluir os parâmetros:
-<property>
-  <name>hadoop.proxyuser.hduser.hosts</name>
-  <value>*</value>
-</property>
-
-<property>
-  <name>hadoop.proxyuser.hueuser.groups</name>
-  <value>*</value>
-</property>
+  <property>
+    <name>hadoop.proxyuser.<user_connected_to_hdfs>.hosts</name>
+    <value>*</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.<user_connected_to_hdfs>.groups</name>
+    <value>*</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.hduser.hosts</name>
+    <value>*</value>
+  </property>
+  <property>
+    <name>hadoop.proxyuser.hduser.groups</name>
+    <value>*</value>
+  </property>
 
 # devem conter o usuário do hive no nome do parâmetro
 
-### REINICIAR HDFS
+### REINICIAR TUDO
 stop-yarn.sh && stop-dfs.sh && start-dfs.sh && start-yarn.sh
-
+nohup hive --service hiveserver2 &
 
 ### testando o beeline (e orando)
 ### ------------ PARTE PROBLEMÁTICA -----------###
 ### IR EM /var/lib/pgsql/data/ E VRF OS ARQUIVOS postgresql.conf e pg_hba.conf
 beeline
-beeline> !connect jdbc:hive2:// hiveuser hivepass org.apache.hive.jdbc.HiveDriver
+
+#no console beeline
+!connect jdbc:hive2://localhost:10000 hiveuser hivepass org.apache.hive.jdbc.HiveDriver
 
 
 ############### ---- PODE SER QUE SEJA NECESSÁRIO: ---------- ################
