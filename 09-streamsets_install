@@ -70,3 +70,71 @@ escolher o mais recente
 - clicar na conexão e adicionar o deduplication
 - a saída 1 continua para  hdfs
 - para a saída 2 (duplicada), criar um processor chamado trash
+
+
+
+####### Criar Pipelines com banco de dados relacional ##########
+
+
+# Conectar ao Banco
+sudo -u postgres psql
+
+# Cria outro banco de dados
+CREATE DATABASE cadastroDB;
+
+# Habilita a sessão para o banco de dados
+\c cadastrodb;
+
+# Cria tabela
+CREATE TABLE FUNCIONARIOS(
+   ID   INT              NOT NULL,
+   NOME VARCHAR (20)     NOT NULL,
+   IDADE  INT              NOT NULL,
+   CIDADE  CHAR (25) ,
+   SALARIO   DECIMAL (18, 2),       
+   PRIMARY KEY (ID)
+);
+
+# Instruções insert
+INSERT INTO FUNCIONARIOS (ID,NOME,IDADE,CIDADE,SALARIO)
+VALUES (1, 'Pele', 32, 'Roma', 2000.00 );
+
+INSERT INTO FUNCIONARIOS (ID,NOME,IDADE,CIDADE,SALARIO)
+VALUES (2, 'Zico', 25, 'Paris', 1500.00 );
+
+INSERT INTO FUNCIONARIOS (ID,NOME,IDADE,CIDADE,SALARIO)
+VALUES (3, 'Rivelino', 23, 'Santiago', 4000.00 );
+
+########################################
+# baixar o driver jdbc para o streamset
+cd /opt/streamsets/streamsets-libs/streamsets-datacollector-jdbc-lib/lib
+wget https://jdbc.postgresql.org/download/postgresql-9.4.1212.jre6.jar
+
+cd /opt/streamsets/streamsets-libs-extras
+cp /opt/streamsets/streamsets-libs/streamsets-datacollector-jdbc-lib/lib/postgresql-* .
+
+##### Configurar o consumer jdbc:
+- instalar o consumer via package manager do streamsets
+- string de conexão: jdbc:postgresql://localhost:5432/cadastrodb
+
+
+#configurar a query - a variável offset será utilizada para recuperar apenas os lançamentos novos
+# SQL query:
+select ID, NOME, SALARIO
+from funcionarios
+where ID > ${OFFSET} order by ID
+
+- inserir as credenciais
+
+
+#############################################
+#Criar a "segunda perna"do kafka para o hdfs
+criar o pipe4
+
+- inserir o kafka consumer como origem
+- inserir o hadoop fs como destino
+- configurar os data format do producer e do consumer nos dois pipelines como JSON
+
+
+
+
