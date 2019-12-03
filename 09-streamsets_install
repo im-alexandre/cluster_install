@@ -1,0 +1,72 @@
+# baixar o streamsets em streamsets.com
+#descompactar e mover para /opt
+#o streamsets vai reclamar do limite de arquivos
+#edite o arquivo limits.conf
+vim /etc/security/limits.conf
+
+#adicionar as linhas - ao final (antes de #end of file):
+*      soft    nofile  32768
+*      hard    nofile  32768
+
+#reiniciar
+sudo reboot
+
+cd /opt/streamsets
+bin/streamsets dc #data colector
+
+### depende do java 1.8
+#acessar via browser:
+hdpmaster:18630
+
+#usuário e senha
+login: admin
+senha: admin
+
+#instalar o driver kafka
+clicar nos pontos no cando direito-acima, add/remove stages,
+apache kafka 2.0
+clicar em "streamsets was started manually"
+
+#iniciar o kafka em background
+nohup bin/zookeeper-server-start.sh config/zookeeper.properties > zookeeper.log &
+nohup bin/kafka-server-start.sh config/server.properties > kafka.log &
+
+#criar tópico:
+bin/kafka-topics.sh --create --topic sensores -zookeeper localhost:2181 --replication-factor 1 --partitions 1
+
+#criar kafka producer (output) no streamsets
+cd ~/data
+vim data.json
+
+## data.json #####
+{
+    "fruit": "Apple",
+    "size": "Large",
+    "color": "Red"
+}
+## data.json #####
+
+# testar tópico criado:
+cd /opt/kafka
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic sensores --from-beginning
+
+
+############## criar a "segunda perna" para gravar do kafka para o hdfs
+## #criar um outro pipeline, evitando que um influencie no outro
+- instalar o driver do hdfs (hadoop)
+- ir em package manager e clicar em HDP (drivr hortonworks)
+escolher o mais recente
+- reiniciar o streamsets
+
+### criar output para o hdfs
+- configurar o diretório de configurações do hadoop
+- /opt/hadoop/etc/hadoop
+# ele so precisa do core-site.xml e hdfs-site.xml
+
+- iniciar o pipeline
+- dar o cat no hdfs
+
+#### evitando registros duplicados:
+- clicar na conexão e adicionar o deduplication
+- a saída 1 continua para  hdfs
+- para a saída 2 (duplicada), criar um processor chamado trash
