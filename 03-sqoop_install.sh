@@ -12,7 +12,7 @@ sudo systemctl start postgresql
 
 sudo -u postgres psql
     # NO TERMINAL DO PGSQL:
-    ALTER USER postgres PASSWORD 'postgres';
+    ALTER USER postgres PASSWORD 'postgresql';
     CREATE DATABASE devdb;
     \c devdb;
     CREATE TABLE customer (nome VARCHAR, outro_nome VARCHAR);
@@ -64,4 +64,3 @@ sqoop import --connect jdbc:postgresql://database-1.cho0e3yiegcg.us-east-2.rds.a
 hdfs dfs -ls
 hdfs dfs -ls customer
 hdfs dfs -cat customer/*
-

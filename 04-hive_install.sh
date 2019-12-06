@@ -135,7 +135,7 @@ hive -version
 ### iniciando o schematool
 ###----------PARTE PROBLEMÁTICA-------------###
 ### DEVE ROLAR UM TROUBLE SHOOTING
-schematool -dbType postgres initSchema
+schematool -dbType postgres -initSchema
 
 ### iniciando o hiveserver2
 #nohup desvincula o processl do tty atual, apertar enter para continuar o trabalho
@@ -190,3 +190,40 @@ sudo -u postgres psql
     CREATE DATABASE metastore;
 
 schematool -dbType postgres -initSchema
+
+
+#Entrando no shell hive
+#iniciar o hdfs
+hive
+
+#testando no console hive
+create table datalake (nome string, outro string);
+
+#verificando o metastore
+sudo -u postgres psql
+
+#no console psql
+\c metastore
+SELECT * FROM "TBLS";
+
+#acessando arquivos do HDFS
+vim teste.txt
+
+######teste.txt #######
+1000;user1
+2000;user2
+#######################
+
+hdfs dfs -mkdir "/teste"
+hdfs dfs -put teste.txt "/teste"
+hive
+
+#no console do hive
+create external table tb_teste(
+id int,
+name string
+)
+row format delimited
+fields delimited by ';'
+location '/teste';
+##############################
